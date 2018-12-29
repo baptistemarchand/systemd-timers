@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"os"
+	"flag"
 
 	"github.com/baptistemarchand/systemd-timers/systemd"
 )
@@ -23,7 +24,9 @@ func main() {
 		os.Exit(1)
 	}
 
-	table, err := generateTable(timers)
+	flag.Parse()
+
+	table, err := generateTable(timers, flag.Args())
 	if err != nil {
 		fmt.Fprintln(os.Stderr, err)
 		os.Exit(1)

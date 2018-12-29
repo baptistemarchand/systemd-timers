@@ -29,7 +29,7 @@ var (
 	}
 )
 
-func generateTable(timers []*systemd.Timer) (string, error) {
+func generateTable(timers []*systemd.Timer, filters []string) (string, error) {
 	buf := &bytes.Buffer{}
 
 	w := tabwriter.NewWriter(buf, 0, 0, 2, ' ', tabwriter.FilterHTML)
@@ -40,6 +40,9 @@ func generateTable(timers []*systemd.Timer) (string, error) {
 	})
 
 	for _, timer := range timers {
+		if !matchesFilters(timer.Name, filters) {
+			continue
+		}
 		var lastTriggered, result, nextElapse string
 
 		if timer.LastTriggered.IsZero() {
@@ -87,6 +90,15 @@ func generateTable(timers []*systemd.Timer) (string, error) {
 	}
 
 	return table, nil
+}
+
+func matchesFilters(name string, filters []string) bool {
+	for _, filter := range filters {
+		if !strings.Contains(name, filter) {
+			return false
+		}
+	}
+	return true
 }
 
 func formatName(name string) string {
