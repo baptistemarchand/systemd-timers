@@ -24,9 +24,11 @@ func main() {
 		os.Exit(1)
 	}
 
+	verbose := flag.Bool("v", false, "Verbose mode: show schedule")
+
 	flag.Parse()
 
-	table, err := generateTable(timers, flag.Args())
+	table, err := generateTable(timers, flag.Args(), *verbose)
 	if err != nil {
 		fmt.Fprintln(os.Stderr, err)
 		os.Exit(1)

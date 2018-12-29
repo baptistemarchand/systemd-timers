@@ -25,14 +25,16 @@ var (
 		"RESULT",
 		"TIME",
 		"NEXT (local time)",
-		"SCHEDULE",
 	}
 )
 
-func generateTable(timers []*systemd.Timer, filters []string) (string, error) {
+func generateTable(timers []*systemd.Timer, filters []string, verbose bool) (string, error) {
 	buf := &bytes.Buffer{}
 
 	w := tabwriter.NewWriter(buf, 0, 0, 2, ' ', tabwriter.FilterHTML)
+	if verbose {
+		headers = append(headers, "SCHEDULE")
+	}
 	fmt.Fprintln(w, strings.Join(headers, "\t"))
 
 	sort.Slice(timers, func (i, j int) bool {
@@ -65,14 +67,17 @@ func generateTable(timers []*systemd.Timer, filters []string) (string, error) {
 
 		}
 
-		fmt.Fprintln(w, strings.Join([]string{
+		columns := []string{
 			formatName(timer.Name),
 			lastTriggered,
 			result,
 			formatExecutionTime(timer.LastExecutionTime),
 			nextElapse,
-			timer.Schedule,
-		}, "\t"))
+		}
+		if verbose {
+			columns = append(columns, timer.Schedule)
+		}
+		fmt.Fprintln(w, strings.Join(columns, "\t"))
 	}
 
 	w.Flush()
