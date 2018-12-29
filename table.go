@@ -21,10 +21,10 @@ const (
 var (
 	headers = []string{
 		"UNIT",
-		"LAST",
+		"LAST (local time)",
 		"RESULT",
 		"TIME",
-		"NEXT",
+		"NEXT (local time)",
 		"SCHEDULE",
 	}
 )
@@ -46,7 +46,7 @@ func generateTable(timers []*systemd.Timer) (string, error) {
 			lastTriggered = ""
 			result = ""
 		} else {
-			lastTriggered = fmt.Sprintf("%s (%s)", timer.LastTriggered.Local().String(), humanize.Time(timer.LastTriggered))
+			lastTriggered = fmt.Sprintf("%s (%s)", timer.LastTriggered.Local().Format("15:04:05"), humanize.Time(timer.LastTriggered))
 
 			if timer.Result == "success" {
 				result = "<fg 2>✔<reset>"
@@ -58,11 +58,12 @@ func generateTable(timers []*systemd.Timer) (string, error) {
 		if timer.NextElapse.IsZero() {
 			nextElapse = ""
 		} else {
-			nextElapse = timer.NextElapse.Local().String()
+			nextElapse = fmt.Sprintf("%s (%s)", timer.NextElapse.Local().Format("15:04:05"), humanize.Time(timer.NextElapse))
+
 		}
 
 		fmt.Fprintln(w, strings.Join([]string{
-			timer.Name,
+			formatName(timer.Name),
 			lastTriggered,
 			result,
 			formatExecutionTime(timer.LastExecutionTime),
@@ -86,6 +87,15 @@ func generateTable(timers []*systemd.Timer) (string, error) {
 	}
 
 	return table, nil
+}
+
+func formatName(name string) string {
+
+	if strings.Contains(name, "systemd") {
+		return fmt.Sprintf("<fg 1>%s<reset>", name)
+	}
+
+	return name
 }
 
 func formatExecutionTime(executionTime uint64) string {
