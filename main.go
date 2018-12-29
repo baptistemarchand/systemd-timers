@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/dtan4/systemd-timers/systemd"
+	"github.com/baptistemarchand/systemd-timers/systemd"
 )
 
 func main() {

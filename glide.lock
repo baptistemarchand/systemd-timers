@@ -1,10 +1,14 @@
-hash: febecaaf018d75e6486840fbc9aa955029540534ec04999e0206360e1ad3595a
-updated: 2017-02-03T18:41:17.598226732+09:00
+hash: 69c5636597ec554844884ae47288568a9052dc7be4800d69bd3822300d588c30
+updated: 2018-12-09T16:49:42.932792384+01:00
 imports:
 - name: github.com/coreos/go-systemd
   version: 48702e0da86bd25e76cfef347e2adeb434a0d0a6
   subpackages:
   - dbus
+- name: github.com/dtan4/systemd-timers
+  version: c006cb8e2cbe92faea669355c84d202c5815bdfb
+  subpackages:
+  - systemd
 - name: github.com/dustin/go-humanize
   version: 7a41df006ff9af79a29f0ffa9c5f21fbe6314a2d
 - name: github.com/fatih/color

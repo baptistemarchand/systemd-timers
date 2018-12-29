@@ -6,8 +6,9 @@ import (
 	"strconv"
 	"strings"
 	"text/tabwriter"
+	"sort"
 
-	"github.com/dtan4/systemd-timers/systemd"
+	"github.com/baptistemarchand/systemd-timers/systemd"
 	"github.com/dustin/go-humanize"
 	"github.com/reconquest/loreley"
 )
@@ -22,7 +23,7 @@ var (
 		"UNIT",
 		"LAST",
 		"RESULT",
-		"EXECUTION TIME",
+		"TIME",
 		"NEXT",
 		"SCHEDULE",
 	}
@@ -34,24 +35,28 @@ func generateTable(timers []*systemd.Timer) (string, error) {
 	w := tabwriter.NewWriter(buf, 0, 0, 2, ' ', tabwriter.FilterHTML)
 	fmt.Fprintln(w, strings.Join(headers, "\t"))
 
+	sort.Slice(timers, func (i, j int) bool {
+		return timers[i].LastTriggered.Before(timers[j].LastTriggered)
+	})
+
 	for _, timer := range timers {
 		var lastTriggered, result, nextElapse string
 
 		if timer.LastTriggered.IsZero() {
-			lastTriggered = "n/a"
-			result = "n/a"
+			lastTriggered = ""
+			result = ""
 		} else {
 			lastTriggered = fmt.Sprintf("%s (%s)", timer.LastTriggered.Local().String(), humanize.Time(timer.LastTriggered))
 
 			if timer.Result == "success" {
-				result = "<fg 2>success<reset>"
+				result = "<fg 2>✔<reset>"
 			} else {
-				result = "<fg 1>failed<reset>"
+				result = "<fg 1>✘<reset>"
 			}
 		}
 
 		if timer.NextElapse.IsZero() {
-			nextElapse = "n/a"
+			nextElapse = ""
 		} else {
 			nextElapse = timer.NextElapse.Local().String()
 		}
@@ -85,40 +90,16 @@ func generateTable(timers []*systemd.Timer) (string, error) {
 
 func formatExecutionTime(executionTime uint64) string {
 	if executionTime == 0 {
-		return "n/a"
+		return ""
 	}
 
 	if executionTime < oneSecond {
-		return "Less than a second"
-	}
-
-	if executionTime < 2*oneSecond {
-		return "1 second"
+		return "0s"
 	}
 
 	if executionTime < 60*oneSecond {
-		return fmt.Sprintf("%s seconds", strconv.Itoa(int(executionTime/oneSecond)))
+		return fmt.Sprintf("%ss", strconv.Itoa(int(executionTime/oneSecond)))
 	}
 
-	if executionTime < 61*oneSecond {
-		return "1 minute"
-	}
-
-	if executionTime < 62*oneSecond {
-		return "1 minute 1 second"
-	}
-
-	if executionTime < 2*oneMinute {
-		return fmt.Sprintf("1 minute %s seconds", strconv.Itoa(int((executionTime-oneMinute)/oneSecond)))
-	}
-
-	if (executionTime-oneMinute)/oneSecond%60 < 1 {
-		return fmt.Sprintf("%s minutes", strconv.Itoa(int(executionTime/oneSecond/60)))
-	}
-
-	if (executionTime-oneMinute)/oneSecond%60 < 2 {
-		return fmt.Sprintf("%s minutes 1 second", strconv.Itoa(int(executionTime/oneSecond/60)))
-	}
-
-	return fmt.Sprintf("%s minutes %s seconds", strconv.Itoa(int(executionTime/oneSecond/60)), strconv.Itoa(int((executionTime-oneMinute)/oneSecond%60)))
+	return fmt.Sprintf("<fg 1>%sm %ss<reset>", strconv.Itoa(int(executionTime/oneSecond/60)), strconv.Itoa(int((executionTime-oneMinute)/oneSecond%60)))
 }

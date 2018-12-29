@@ -1,4 +1,4 @@
-package: github.com/dtan4/systemd-timers
+package: github.com/baptistemarchand/systemd-timers
 import:
 - package: github.com/coreos/go-systemd
   version: ~14.0.0
