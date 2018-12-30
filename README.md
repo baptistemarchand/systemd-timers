@@ -1,6 +1,6 @@
 # systemd-timers
 
-[![Build Status](https://travis-ci.org/dtan4/systemd-timers.svg?branch=master)](https://travis-ci.org/dtan4/systemd-timers)
+[![Build Status](https://travis-ci.org/baptistemarchand/systemd-timers.svg?branch=master)](https://travis-ci.org/baptistemarchand/systemd-timers)
 
 Better `systemctl list-timers`
 
