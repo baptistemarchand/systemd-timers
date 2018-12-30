@@ -28,13 +28,16 @@ func generateTable(timers []*systemd.Timer, filters []string, verbose bool) (str
 		return timers[i].LastTriggered.Before(timers[j].LastTriggered)
 	})
 
+	now := time.Now()
+
 	for _, timer := range timers {
 		if !matchesFilters(timer.Name, filters) || timer.LastTriggered.IsZero() {
 			continue
 		}
 		var lastTriggered, result string
 
-		lastTriggered = fmt.Sprintf("%s\t(%s)", timer.LastTriggered.Local().Format("15:04:05"), humanize.Time(timer.LastTriggered))
+		color := colorizeTime(timer.LastTriggered.Local(), now)
+		lastTriggered = fmt.Sprintf("%s%s\t(%s)<reset>", color, timer.LastTriggered.Local().Format("15:04:05"), humanize.Time(timer.LastTriggered))
 
 		if timer.Result == "success" {
 			result = "<fg 2>✔<reset>"
@@ -53,7 +56,7 @@ func generateTable(timers []*systemd.Timer, filters []string, verbose bool) (str
 	}
 
 	fmt.Fprintln(w, "--\t")
-	fmt.Fprintln(w, fmt.Sprintf("now\t%s", time.Now().Format("15:04:05")))
+	fmt.Fprintln(w, fmt.Sprintf("now\t%s", now.Format("15:04:05")))
 	fmt.Fprintln(w, "--\t")
 
 	sort.Slice(timers, func (i, j int) bool {
@@ -65,7 +68,8 @@ func generateTable(timers []*systemd.Timer, filters []string, verbose bool) (str
 			continue
 		}
 
-		nextElapse := fmt.Sprintf("%s\t(%s)", timer.NextElapse.Local().Format("15:04:05"), humanize.Time(timer.NextElapse))
+		color := colorizeTime(timer.NextElapse.Local(), now)
+		nextElapse := fmt.Sprintf("%s%s\t(%s)<reset>", color, timer.NextElapse.Local().Format("15:04:05"), humanize.Time(timer.NextElapse))
 
 		columns := []string{
 			formatName(timer.Name),
@@ -103,13 +107,35 @@ func matchesFilters(name string, filters []string) bool {
 	return true
 }
 
+func colorizeTime(t time.Time, now time.Time) string {
+	var diff time.Duration
+
+	if t.After(now) {
+		diff = t.Sub(now)
+	} else {
+		diff = now.Sub(t)
+	}
+
+	if diff.Minutes() < 15 {
+		return "<fg 1>"
+	}
+	if diff.Minutes() < 30 {
+		return "<fg 3>"
+	}
+	if diff.Hours() < 1 {
+		return "<fg 2>"
+	}
+
+	return ""
+}
+
 func formatName(name string) string {
 
 	colors := map[string]string{
-		"stats": "<fg 3>",
-		"structure": "<fg 4>",
-		"stripe": "<fg 5>",
-		"system": "<bg 6>",
+		"stats": "<fg 4>",
+		"structure": "<fg 5>",
+		"stripe": "<fg 6>",
+		"system": "<fg 0><bg 6>",
 	}
 
 	for pattern, color := range colors {
