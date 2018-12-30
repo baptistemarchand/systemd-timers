@@ -11,47 +11,47 @@ func TestFormatExecutionTime(t *testing.T) {
 	}{
 		{
 			executionTime: 0,
-			expected:      "n/a",
+			expected:      "",
 		},
 		{
 			executionTime: 100,
-			expected:      "Less than a second",
+			expected:      "0s",
 		},
 		{
 			executionTime: 1 * 1000 * 1000,
-			expected:      "1 second",
+			expected:      "1s",
 		},
 		{
 			executionTime: 20 * 1000 * 1000,
-			expected:      "20 seconds",
+			expected:      "20s",
 		},
 		{
 			executionTime: 60 * 1000 * 1000,
-			expected:      "1 minute",
+			expected:      "<fg 1>1m 0s<reset>",
 		},
 		{
 			executionTime: 61 * 1000 * 1000,
-			expected:      "1 minute 1 second",
+			expected:      "<fg 1>1m 1s<reset>",
 		},
 		{
 			executionTime: 62 * 1000 * 1000,
-			expected:      "1 minute 2 seconds",
+			expected:      "<fg 1>1m 2s<reset>",
 		},
 		{
 			executionTime: 120 * 1000 * 1000,
-			expected:      "2 minutes",
+			expected:     "<fg 1>2m 0s<reset>",
 		},
 		{
 			executionTime: 121 * 1000 * 1000,
-			expected:      "2 minutes 1 second",
+			expected:      "<fg 1>2m 1s<reset>",
 		},
 		{
 			executionTime: 142 * 1000 * 1000,
-			expected:      "2 minutes 22 seconds",
+			expected:      "<fg 1>2m 22s<reset>",
 		},
 		{
 			executionTime: 192 * 60 * 1000 * 1000,
-			expected:      "192 minutes",
+			expected:      "<fg 1>192m 0s<reset>",
 		},
 	}
 
