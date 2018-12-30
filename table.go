@@ -55,9 +55,9 @@ func generateTable(timers []*systemd.Timer, filters []string, verbose bool) (str
 		fmt.Fprintln(w, strings.Join(columns, "\t"))
 	}
 
-	fmt.Fprintln(w, "--\t")
-	fmt.Fprintln(w, fmt.Sprintf("now\t%s", now.Format("15:04:05")))
-	fmt.Fprintln(w, "--\t")
+	fmt.Fprintln(w, "\t")
+	fmt.Fprintln(w, fmt.Sprintf("<fg 7>now\t%s<reset>", now.Format("15:04:05")))
+	fmt.Fprintln(w, "\t")
 
 	sort.Slice(timers, func (i, j int) bool {
 		return timers[i].NextElapse.Before(timers[j].NextElapse)
