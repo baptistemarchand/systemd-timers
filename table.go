@@ -105,8 +105,17 @@ func matchesFilters(name string, filters []string) bool {
 
 func formatName(name string) string {
 
-	if strings.Contains(name, "systemd") {
-		return fmt.Sprintf("<fg 3>%s<reset>", name)
+	colors := map[string]string{
+		"stats": "<fg 3>",
+		"structure": "<fg 4>",
+		"stripe": "<fg 5>",
+		"system": "<bg 6>",
+	}
+
+	for pattern, color := range colors {
+		if strings.Contains(name, pattern) {
+			return fmt.Sprintf("%s%s<reset>", color, name)
+		}
 	}
 
 	return name
