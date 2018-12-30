@@ -7,6 +7,7 @@ import (
 	"strings"
 	"text/tabwriter"
 	"sort"
+	"time"
 
 	"github.com/baptistemarchand/systemd-timers/systemd"
 	"github.com/dustin/go-humanize"
@@ -18,53 +19,27 @@ const (
 	oneMinute = 60 * oneSecond
 )
 
-var (
-	headers = []string{
-		"UNIT",
-		"LAST (local time)",
-		"RESULT",
-		"TIME",
-		"NEXT (local time)",
-	}
-)
-
 func generateTable(timers []*systemd.Timer, filters []string, verbose bool) (string, error) {
 	buf := &bytes.Buffer{}
 
 	w := tabwriter.NewWriter(buf, 0, 0, 2, ' ', tabwriter.FilterHTML)
-	if verbose {
-		headers = append(headers, "SCHEDULE")
-	}
-	fmt.Fprintln(w, strings.Join(headers, "\t"))
 
 	sort.Slice(timers, func (i, j int) bool {
 		return timers[i].LastTriggered.Before(timers[j].LastTriggered)
 	})
 
 	for _, timer := range timers {
-		if !matchesFilters(timer.Name, filters) {
+		if !matchesFilters(timer.Name, filters) || timer.LastTriggered.IsZero() {
 			continue
 		}
-		var lastTriggered, result, nextElapse string
+		var lastTriggered, result string
 
-		if timer.LastTriggered.IsZero() {
-			lastTriggered = ""
-			result = ""
+		lastTriggered = fmt.Sprintf("%s (%s)", timer.LastTriggered.Local().Format("15:04:05"), humanize.Time(timer.LastTriggered))
+
+		if timer.Result == "success" {
+			result = "<fg 2>✔<reset>"
 		} else {
-			lastTriggered = fmt.Sprintf("%s (%s)", timer.LastTriggered.Local().Format("15:04:05"), humanize.Time(timer.LastTriggered))
-
-			if timer.Result == "success" {
-				result = "<fg 2>✔<reset>"
-			} else {
-				result = "<fg 1>✘<reset>"
-			}
-		}
-
-		if timer.NextElapse.IsZero() {
-			nextElapse = ""
-		} else {
-			nextElapse = fmt.Sprintf("%s (%s)", timer.NextElapse.Local().Format("15:04:05"), humanize.Time(timer.NextElapse))
-
+			result = "<fg 1>✘<reset>"
 		}
 
 		columns := []string{
@@ -72,6 +47,28 @@ func generateTable(timers []*systemd.Timer, filters []string, verbose bool) (str
 			lastTriggered,
 			result,
 			formatExecutionTime(timer.LastExecutionTime),
+		}
+
+		fmt.Fprintln(w, strings.Join(columns, "\t"))
+	}
+
+	fmt.Fprintln(w, "--")
+	fmt.Fprintln(w, fmt.Sprintf("NOW\t%s", time.Now().Format("15:04:05")))
+	fmt.Fprintln(w, "--")
+
+	sort.Slice(timers, func (i, j int) bool {
+		return timers[i].NextElapse.Before(timers[j].NextElapse)
+	})
+
+	for _, timer := range timers {
+		if !matchesFilters(timer.Name, filters) || timer.NextElapse.IsZero() {
+			continue
+		}
+
+		nextElapse := fmt.Sprintf("%s (%s)", timer.NextElapse.Local().Format("15:04:05"), humanize.Time(timer.NextElapse))
+
+		columns := []string{
+			formatName(timer.Name),
 			nextElapse,
 		}
 		if verbose {
@@ -109,7 +106,7 @@ func matchesFilters(name string, filters []string) bool {
 func formatName(name string) string {
 
 	if strings.Contains(name, "systemd") {
-		return fmt.Sprintf("<fg 1>%s<reset>", name)
+		return fmt.Sprintf("<fg 3>%s<reset>", name)
 	}
 
 	return name
