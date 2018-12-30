@@ -34,7 +34,7 @@ func generateTable(timers []*systemd.Timer, filters []string, verbose bool) (str
 		}
 		var lastTriggered, result string
 
-		lastTriggered = fmt.Sprintf("%s (%s)", timer.LastTriggered.Local().Format("15:04:05"), humanize.Time(timer.LastTriggered))
+		lastTriggered = fmt.Sprintf("%s\t(%s)", timer.LastTriggered.Local().Format("15:04:05"), humanize.Time(timer.LastTriggered))
 
 		if timer.Result == "success" {
 			result = "<fg 2>✔<reset>"
@@ -52,9 +52,9 @@ func generateTable(timers []*systemd.Timer, filters []string, verbose bool) (str
 		fmt.Fprintln(w, strings.Join(columns, "\t"))
 	}
 
-	fmt.Fprintln(w, "--")
-	fmt.Fprintln(w, fmt.Sprintf("NOW\t%s", time.Now().Format("15:04:05")))
-	fmt.Fprintln(w, "--")
+	fmt.Fprintln(w, "--\t")
+	fmt.Fprintln(w, fmt.Sprintf("now\t%s", time.Now().Format("15:04:05")))
+	fmt.Fprintln(w, "--\t")
 
 	sort.Slice(timers, func (i, j int) bool {
 		return timers[i].NextElapse.Before(timers[j].NextElapse)
@@ -65,7 +65,7 @@ func generateTable(timers []*systemd.Timer, filters []string, verbose bool) (str
 			continue
 		}
 
-		nextElapse := fmt.Sprintf("%s (%s)", timer.NextElapse.Local().Format("15:04:05"), humanize.Time(timer.NextElapse))
+		nextElapse := fmt.Sprintf("%s\t(%s)", timer.NextElapse.Local().Format("15:04:05"), humanize.Time(timer.NextElapse))
 
 		columns := []string{
 			formatName(timer.Name),
