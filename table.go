@@ -19,10 +19,36 @@ const (
 	oneMinute = 60 * oneSecond
 )
 
+func filterTimers(timers []*systemd.Timer, filters []string) []*systemd.Timer {
+	var filteredTimers []*systemd.Timer
+
+	excludedTimers := []string{
+		"systemd-tmpfiles-clean",
+		"apt-daily",
+	}
+
+	mainLoop:
+	for _, timer := range timers {
+		if !matchesFilters(timer.Name, filters) {
+			continue
+		}
+		for _, name := range excludedTimers {
+			if strings.Contains(timer.Name, name) {
+				continue mainLoop
+			}
+		}
+		filteredTimers = append(filteredTimers, timer)
+	}
+
+	return filteredTimers
+}
+
 func generateTable(timers []*systemd.Timer, filters []string, verbose bool) (string, error) {
 	buf := &bytes.Buffer{}
 
 	w := tabwriter.NewWriter(buf, 0, 0, 2, ' ', tabwriter.FilterHTML)
+
+	timers = filterTimers(timers, filters)
 
 	sort.Slice(timers, func (i, j int) bool {
 		return timers[i].LastTriggered.Before(timers[j].LastTriggered)
@@ -31,7 +57,7 @@ func generateTable(timers []*systemd.Timer, filters []string, verbose bool) (str
 	now := time.Now()
 
 	for _, timer := range timers {
-		if !matchesFilters(timer.Name, filters) || timer.LastTriggered.IsZero() {
+		if timer.LastTriggered.IsZero() {
 			continue
 		}
 		var lastTriggered, result string
@@ -56,7 +82,7 @@ func generateTable(timers []*systemd.Timer, filters []string, verbose bool) (str
 	}
 
 	fmt.Fprintln(w, "\t")
-	fmt.Fprintln(w, fmt.Sprintf("<fg 7>now\t%s<reset>", now.Format("15:04:05")))
+	fmt.Fprintln(w, fmt.Sprintf("<fg 0><bg 7>now\t%s<reset>", now.Format("15:04:05")))
 	fmt.Fprintln(w, "\t")
 
 	sort.Slice(timers, func (i, j int) bool {
@@ -64,7 +90,7 @@ func generateTable(timers []*systemd.Timer, filters []string, verbose bool) (str
 	})
 
 	for _, timer := range timers {
-		if !matchesFilters(timer.Name, filters) || timer.NextElapse.IsZero() {
+		if timer.NextElapse.IsZero() {
 			continue
 		}
 
@@ -132,10 +158,9 @@ func colorizeTime(t time.Time, now time.Time) string {
 func formatName(name string) string {
 
 	colors := map[string]string{
-		"stats": "<fg 4>",
+		"stats": "<fg 6>",
 		"structure": "<fg 5>",
-		"stripe": "<fg 6>",
-		"system": "<fg 0><bg 6>",
+		"stripe": "<fg 4>",
 	}
 
 	for pattern, color := range colors {
